@@ -45,7 +45,7 @@ preferences {
         section("Zone Times...") {
             input "zone1", "string", title: "Fountain Time", description: "minutes", multiple: false, required: false
             input "zone2", "string", title: "Back Left Time", description: "minutes", multiple: false, required: false
-            input "zone3", "string", title: "Back Right Time", description: "minutes", multiple: false, required: false
+            input "zone3", "string", title: "Potager", description: "minutes", multiple: false, required: false
             input "zone4", "string", title: "Rose Alley Time", description: "minutes", multiple: false, required: false
             input "zone5", "string", title: "Front Flower Time", description: "minutes", multiple: false, required: false
             input "zone6", "string", title: "Grass 1 Time", description: "minutes", multiple: false, required: false
@@ -173,11 +173,12 @@ def water_ladwp(){
     state.daysSinceLastWatering[state.currentTimerIx] = 0
     if (isWateringDay()){
     	sendPush("Watering now with index of ${w_idx}")
-    	water(w_idx)
+    	water(w_idx,false)
     }
     else {
-    log.debug("Today is not a watering day")
-    	sendPush("Skip watering for today.")
+    log.debug("Today is a potager only watering day.")
+    	sendPush("Watering potager only")
+        water(w_idx,true)
     }
     
 }
@@ -303,13 +304,19 @@ def isStormy() {
     return forecastInches
 }
 
-def water(w_idx) {
+def water(w_idx,potager_only) {
     state.triggered = true
     log.info('Watering in water function')
     //if(anyZoneTimes()) {
         def zoneTimes = []
         log.info("Watering now with index of ${w_idx}")
-        for(int z = 1; z <= 9; z++) {
+        def minZone =1
+ 		def maxZone = 9
+        if (potager_only){
+        	minZone = 3
+            maxZone = 3
+            }
+        for(int z = minZone; z <= maxZone; z++) {
             
             def zoneTime = safeToFloat(settings["zone${z}"])
             log.info("Turning zone ${z} on base time ${zoneTime}, water index ${w_idx}")
